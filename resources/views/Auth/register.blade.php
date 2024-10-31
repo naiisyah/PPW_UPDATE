@@ -6,7 +6,8 @@
         <div class="card">
             <div class="card-header">Register</div>
             <div class="card-body">
-                <form action="{{ route('store') }}" method="post">
+                {{-- menambahkan enctype="multipart/form-data" --}}
+                <form action="{{ route('store') }}" method="post" enctype="multipart/form-data">
                     @csrf <!-- Menggunakan @csrf, bukan @crsf -->
                     
                     <!-- Name Field -->
@@ -38,6 +39,17 @@
                             <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password">
                             @if ($errors->has('password'))
                                 <span class="text-danger">{{ $errors->first('password') }}</span>
+                            @endif
+                        </div>
+                    </div>
+
+                      <!-- Photo Field -->
+                      <div class="mb-3 row">
+                        <label for="photo" class="col-md-4 col-form-label text-md-end text-start">Photo</label>
+                        <div class="col-md-6">
+                            <input type="file" class="form-control @error('photo') is-invalid @enderror" id="photo" name="photo" value="{{ old('photo') }}">
+                            @if ($errors->has('photo'))
+                                <span class="text-danger">{{ $errors->first('photo') }}</span>
                             @endif
                         </div>
                     </div>

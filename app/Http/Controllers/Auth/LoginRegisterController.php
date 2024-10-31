@@ -28,13 +28,25 @@ class LoginRegisterController extends Controller
             'name' => 'required|string|max:205',
             'email' => 'required|email|max:250|unique:users',
             'password' => 'required|min:8|confirmed', // Menambahkan validasi untuk password
+            'photo'=>'image|nullable|max:1999' // Menambahkan validasi untuk photo
+            // validasi untuk memastikan file yang diupload adalah image.
         ]);
+
+        // membuat file untuik untuk menghindari kesamaan nama photo
+        if ($request->hasFile('photo')){
+            $filenameWithExt = $request->file('photo')->getClientOriginalName();
+            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+            $extension = $request->file('photo')->getClientOriginalExtension();
+            $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+            $path = $request->file('photo')->storeAs('photos', $filenameSimpan);
+        }
     
         // Membuat pengguna baru
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password) // Hanya hash di sini
+            'password' => Hash::make($request->password), // Hanya hash di sini
+            'photo' => $path // Menyimpan path photo
         ]);
     
         // Login pengguna

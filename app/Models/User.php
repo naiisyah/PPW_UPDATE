@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        // menambahkan photo agar photo yang di masukkan dapat di simpan
+        'photo'
     ];
 
     /**
