@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      */
@@ -17,9 +18,10 @@ class GalleryController extends Controller
         $data = array(
             'id' => "posts",
             'menu' => 'Gallery',
-            'galleries' => Post::where('picture', '!=', '')->whereNotNull('picture')->orderBy('created_at', 'desc')->paginate(30)
+            'galleries' => array()
+            // 'galleries' => Post::where('picture', '!=', '')->whereNotNull('picture')->orderBy('created_at', 'desc')->paginate(30)
         );
-        return view('gallery.index')->with($data);
+        return view('gallery.index', $data);
     }
 
     /**
@@ -60,6 +62,7 @@ class GalleryController extends Controller
         $post -> title = $request->input('title');
         $post -> description = $request->input('description');
         $post -> save();
+
         return redirect('gallery')->with('success', 'Berhasil menambahkan data baru');
     }  
 
@@ -77,13 +80,18 @@ class GalleryController extends Controller
     public function edit(string $id)
     {
         $gallery = Post::findOrFail($id); // Mencari data berdasarkan ID, atau gagal jika tidak ditemukan
+
+        if (!$gallery) {
+            return redirect('gallery')->with('error', 'Gallery item not found');
+        }
+
         return view('gallery.edit')->with('gallery', $gallery); // Mengirim data ke view edit
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
         $this->validate($request, [
             'title' => 'required|max:255',
@@ -92,9 +100,12 @@ class GalleryController extends Controller
         ]);
     
         $post = Post::findOrFail($id); // Mengambil data yang ingin diperbarui
-    
+       
         // Mengecek jika ada gambar baru yang diupload
         if ($request->hasFile('picture')) {
+            if ($post->picture != 'noimage.png') {
+                Storage::delete('public/posts/' . $post->picture); // Pastikan path sesuai
+            }
             // Mengupload dan menyimpan gambar baru
             $filenameWithExt = $request->file('picture')->getClientOriginalName();
             $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
@@ -128,5 +139,55 @@ class GalleryController extends Controller
         $post->delete(); // Menghapus data dari database
     
         return redirect('gallery')->with('success', 'Data berhasil dihapus');
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    /**
+     * @OA\Get(
+     *     path="/api/gallery",
+     *     tags={"gallery"},
+     *     summary="Returns a Sample API gallery response",
+     *     description="A sample gallery to test out the API",
+     *     operationId="gallery",
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+     *         @OA\JsonContent
+     *           (example={
+     *               "success": true,
+     *               "message": "Berhasil memproses galleries",
+     *               "galleries": {
+     *                  {
+     *                      "id": 1,
+     *                      "title": "gallery bell",
+     *                      "description": "deskripsi gallery bell",
+     *                      "picture": "bell.jpeg",
+     *                      "created_at": "2024-11-06T02:20:42.000000Z",
+     *                      "updated_at": "2024-11-06T02:20:42.000000Z"
+     *                  }
+     *              }
+     *          }),
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Data tidak ditemukan",
+     *         @OA\JsonContent
+     *           (example={
+     *               "detail": "strings"
+     *          }),
+     *     )
+     * )
+     */
+    
+    public function gallery()
+    {
+        $data = array(
+            'message' => 'Berhasil memproses galleries',
+            'success' => true,
+            'galleries' => Post::where('picture', '!=', '')->whereNotNull('picture')->orderBy('created_at', 'desc')->get()
+        );
+        return response()->json($data);
     }
 }

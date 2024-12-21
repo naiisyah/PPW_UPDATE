@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Mail\Registrasiemail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class LoginRegisterController extends Controller
 {
@@ -42,12 +44,15 @@ class LoginRegisterController extends Controller
         }
     
         // Membuat pengguna baru
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password), // Hanya hash di sini
+            'level' => 'admin',
             'photo' => $path // Menyimpan path photo
         ]);
+
+        Mail::to($user->email)->send(new Registrasiemail($user));
     
         // Login pengguna
         $credentials = $request->only('email', 'password');
